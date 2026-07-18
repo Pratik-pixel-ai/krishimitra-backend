@@ -36,17 +36,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String token = authHeader.substring(7);
-        final String phone = jwtUtil.extractPhone(token);
 
-        if (phone != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(phone);
-            if (jwtUtil.validateToken(token)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+            if (jwtUtil.validateToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                final String phone = jwtUtil.extractPhone(token);
+                if (phone != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(phone);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Invalid/expired token or unknown user: leave the request unauthenticated
+            // instead of letting the exception escape the filter chain.
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
