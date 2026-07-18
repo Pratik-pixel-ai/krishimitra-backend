@@ -84,7 +84,7 @@ public class PlantDiagnosisService {
                 .uri(uriBuilder -> uriBuilder.scheme("https").host("generativelanguage.googleapis.com")
                         .path("/v1beta/models/{model}:generateContent").queryParam("key", geminiApiKey)
                         .build(geminiModel))
-                .contentType(MediaType.APPLICATION_JSON).bodyValue(body).retrieve()
+                .contentType(MediaType.APPLICATION_JSON).bodyValue(objectMapper.writeValueAsString(body)).retrieve()
                 .bodyToMono(String.class).block();
         JsonNode root = objectMapper.readTree(raw == null ? "{}" : raw);
         String json = root.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText();
