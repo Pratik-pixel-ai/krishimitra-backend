@@ -33,7 +33,10 @@ public class PlantDiagnosisService {
     private final FarmerRepository farmerRepository;
     private final PlantDiagnosisRepository diagnosisRepository;
     private final WebClient.Builder webClientBuilder;
-    private final ObjectMapper objectMapper;
+    // Built directly rather than injected: this deployment doesn't have an
+    // ObjectMapper bean auto-configured, so constructor-injecting one fails
+    // application startup entirely ("No qualifying bean of type ObjectMapper").
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${gemini.api.key}") private String geminiApiKey;
     @Value("${gemini.model}") private String geminiModel;
